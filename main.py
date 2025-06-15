@@ -1,14 +1,19 @@
 from typing import Optional
+from fastapi import FastAPI, Query
+from fastapi.responses import FileResponse
 
-from fastapi import FastAPI
+import asyncio
+from edge_tts import Communicate
 
 app = FastAPI()
 
-
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"msg": "Hola, usa /tts?text=Tu texto para obtener el mp3"}
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/tts")
+async def tts_endpoint(text: str = Query(..., min_length=1)):
+    output_path = "voz.mp3"
+    tts = Communicate(text=text, voice="es-CL-LorenzoNeural")
+    await tts.save(output_path)
+    return FileResponse(output_path, media_type="audio/mpeg", filename="voz.mp3")
